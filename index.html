@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>OmniMath OS — Interactive Equation Visualizer</title>
 
-  <!-- KaTeX for beautiful LaTeX rendering -->
+  <!-- KaTeX -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" />
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 
-  <!-- Plotly.js for 2D/3D interactive visual computing -->
+  <!-- Plotly.js -->
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 
-  <!-- Math.js for parsing and client-side evaluating arbitrary functions -->
+  <!-- Math.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.2/math.min.js"></script>
 
   <style>
@@ -21,23 +21,17 @@
       --bg-surface: #10121d;
       --bg-panel: rgba(20, 24, 38, 0.75);
       --border-color: rgba(255, 255, 255, 0.08);
-      --border-glow: rgba(99, 102, 241, 0.3);
       --accent-cyan: #06b6d4;
       --accent-violet: #8b5cf6;
       --accent-pink: #ec4899;
       --text-main: #f3f4f6;
       --text-muted: #9ca3af;
       --radius: 12px;
-      --font-mono: 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace;
-      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: var(--font-sans);
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-sans); }
 
     body {
       background-color: var(--bg-base);
@@ -51,7 +45,7 @@
         radial-gradient(ellipse 50% 30% at 90% 100%, rgba(236, 72, 153, 0.08), transparent);
     }
 
-    /* --- BROWSER CHROME: Top Navigation & Tab Bar --- */
+    /* BROWSER CHROME */
     .browser-header {
       background: rgba(14, 16, 26, 0.85);
       backdrop-filter: blur(16px);
@@ -62,14 +56,12 @@
       z-index: 100;
     }
 
-    /* Tabs Bar */
     .tab-bar {
       display: flex;
       align-items: center;
       padding: 6px 12px 0 12px;
       gap: 6px;
       overflow-x: auto;
-      scrollbar-width: none;
     }
     .tab-bar::-webkit-scrollbar { display: none; }
 
@@ -87,12 +79,9 @@
       cursor: pointer;
       max-width: 220px;
       min-width: 140px;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.2s ease;
     }
-    .tab:hover {
-      background: rgba(255, 255, 255, 0.06);
-      color: var(--text-main);
-    }
+    .tab:hover { background: rgba(255, 255, 255, 0.06); color: var(--text-main); }
     .tab.active {
       background: var(--bg-surface);
       color: var(--text-main);
@@ -100,450 +89,209 @@
       box-shadow: 0 -2px 10px rgba(99, 102, 241, 0.15);
       font-weight: 500;
     }
-    .tab-title {
-      flex: 1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+    .tab-title { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .tab-close {
-      width: 18px;
-      height: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 50%;
-      font-size: 13px;
-      opacity: 0.6;
-      transition: 0.2s;
+      width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;
+      border-radius: 50%; font-size: 13px; opacity: 0.6;
     }
-    .tab-close:hover {
-      background: rgba(255, 255, 255, 0.2);
-      opacity: 1;
-    }
+    .tab-close:hover { background: rgba(255, 255, 255, 0.2); opacity: 1; }
 
     .btn-new-tab {
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      font-size: 18px;
-      cursor: pointer;
-      padding: 4px 10px;
-      border-radius: 6px;
-      transition: 0.2s;
+      background: transparent; border: none; color: var(--text-muted);
+      font-size: 18px; cursor: pointer; padding: 4px 10px; border-radius: 6px;
     }
-    .btn-new-tab:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: #fff;
-    }
+    .btn-new-tab:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
 
-    /* Navigation Bar / Omnibox */
     .nav-bar {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 8px 16px;
-      background: var(--bg-surface);
-      border-top: 1px solid var(--border-color);
+      display: flex; align-items: center; gap: 12px; padding: 8px 16px;
+      background: var(--bg-surface); border-top: 1px solid var(--border-color);
     }
-
-    .nav-actions {
-      display: flex;
-      gap: 8px;
-    }
+    .nav-actions { display: flex; gap: 8px; }
     .nav-btn {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border-color);
-      color: var(--text-muted);
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      transition: 0.2s;
+      background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color);
+      color: var(--text-muted); width: 32px; height: 32px; border-radius: 8px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
-    .nav-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: #fff;
-      border-color: rgba(255, 255, 255, 0.2);
-    }
+    .nav-btn:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
 
     .omnibox {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      background: rgba(8, 9, 15, 0.8);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 0 14px;
-      gap: 10px;
-      height: 36px;
-      transition: border-color 0.2s;
+      flex: 1; display: flex; align-items: center; background: rgba(8, 9, 15, 0.8);
+      border: 1px solid var(--border-color); border-radius: 8px; padding: 0 14px; gap: 10px; height: 36px;
     }
-    .omnibox:focus-within {
-      border-color: var(--accent-cyan);
-      box-shadow: 0 0 12px rgba(6, 182, 212, 0.25);
-    }
+    .omnibox:focus-within { border-color: var(--accent-cyan); box-shadow: 0 0 10px rgba(6, 182, 212, 0.25); }
     .omnibox-badge {
-      font-size: 0.7rem;
-      background: rgba(99, 102, 241, 0.2);
-      color: #a5b4fc;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-family: var(--font-mono);
-      font-weight: bold;
+      font-size: 0.7rem; background: rgba(99, 102, 241, 0.2); color: #a5b4fc;
+      padding: 2px 6px; border-radius: 4px; font-weight: bold;
     }
     .omnibox input {
-      flex: 1;
-      background: transparent;
-      border: none;
-      outline: none;
-      color: #fff;
-      font-size: 0.86rem;
-      font-family: var(--font-mono);
+      flex: 1; background: transparent; border: none; outline: none; color: #fff;
+      font-size: 0.86rem; font-family: var(--font-mono);
     }
 
     .btn-action-primary {
       background: linear-gradient(135deg, var(--accent-violet), var(--accent-pink));
-      border: none;
-      color: white;
-      padding: 7px 16px;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 0.82rem;
-      cursor: pointer;
-      box-shadow: 0 4px 14px rgba(139, 92, 246, 0.3);
-      transition: 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      border: none; color: white; padding: 7px 16px; border-radius: 8px; font-weight: 600;
+      font-size: 0.82rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px;
     }
-    .btn-action-primary:hover {
-      transform: translateY(-1px);
-      filter: brightness(1.1);
-      box-shadow: 0 6px 18px rgba(139, 92, 246, 0.45);
-    }
+    .btn-action-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
 
-    /* --- WORKSPACE VIEWPORT --- */
-    .viewport {
-      flex: 1;
-      display: flex;
-      overflow: hidden;
-    }
+    /* VIEWPORT */
+    .viewport { flex: 1; display: flex; overflow: hidden; }
 
-    /* Left Control & Inspector Panel */
     .sidebar {
-      width: 440px;
-      background: var(--bg-surface);
-      border-right: 1px solid var(--border-color);
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-      scrollbar-width: thin;
-      scrollbar-color: rgba(255,255,255,0.1) transparent;
-      padding: 20px;
-      gap: 20px;
+      width: 420px; background: var(--bg-surface); border-right: 1px solid var(--border-color);
+      display: flex; flex-direction: column; overflow-y: auto; padding: 20px; gap: 16px;
     }
-
     .card {
-      background: var(--bg-panel);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius);
-      padding: 16px;
-      backdrop-filter: blur(12px);
+      background: var(--bg-panel); border: 1px solid var(--border-color);
+      border-radius: var(--radius); padding: 14px; backdrop-filter: blur(12px);
     }
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-    .card-title {
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text-muted);
-      font-weight: 700;
-    }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .card-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 700; }
 
-    /* LaTeX Live Preview Box */
     .math-display-box {
-      min-height: 58px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 8px;
-      padding: 12px;
-      overflow-x: auto;
-      font-size: 1.15rem;
+      min-height: 52px; display: flex; align-items: center; justify-content: center;
+      background: rgba(0, 0, 0, 0.3); border-radius: 8px; padding: 10px; font-size: 1.15rem;
       border: 1px dashed rgba(255, 255, 255, 0.1);
     }
 
-    /* Dimension Selector Switcher */
-    .mode-selector {
-      display: flex;
-      gap: 6px;
-      background: rgba(0, 0, 0, 0.3);
-      padding: 4px;
-      border-radius: 8px;
-      margin-bottom: 12px;
-    }
+    .mode-selector { display: flex; gap: 6px; background: rgba(0, 0, 0, 0.3); padding: 4px; border-radius: 8px; margin-bottom: 10px; }
     .mode-btn {
-      flex: 1;
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      padding: 6px 10px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: 0.2s;
+      flex: 1; background: transparent; border: none; color: var(--text-muted);
+      padding: 6px; font-size: 0.78rem; font-weight: 600; border-radius: 6px; cursor: pointer;
     }
-    .mode-btn.active {
-      background: rgba(255, 255, 255, 0.1);
-      color: #fff;
-    }
+    .mode-btn.active { background: rgba(255, 255, 255, 0.1); color: #fff; }
 
-    /* Sliders Section */
-    .slider-group {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-    .slider-row {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .slider-header {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.78rem;
-      color: var(--text-muted);
-    }
-    .slider-header span.val {
-      font-family: var(--font-mono);
-      color: var(--accent-cyan);
-      font-weight: bold;
-    }
-    input[type="range"] {
-      -webkit-appearance: none;
-      width: 100%;
-      height: 5px;
-      background: rgba(255, 255, 255, 0.15);
-      border-radius: 3px;
-      outline: none;
-    }
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 15px;
-      height: 15px;
-      border-radius: 50%;
-      background: var(--accent-cyan);
-      cursor: pointer;
-      box-shadow: 0 0 10px rgba(6, 182, 212, 0.8);
-      transition: 0.15s;
-    }
-    input[type="range"]::-webkit-slider-thumb:hover {
-      transform: scale(1.2);
-    }
-
-    /* Presets Chips */
-    .presets-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
+    .presets-container { display: flex; flex-wrap: wrap; gap: 6px; }
     .preset-pill {
-      font-size: 0.73rem;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border-color);
-      color: var(--text-muted);
-      padding: 4px 10px;
-      border-radius: 100px;
-      cursor: pointer;
-      transition: 0.2s;
+      font-size: 0.72rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color);
+      color: var(--text-muted); padding: 4px 10px; border-radius: 100px; cursor: pointer;
     }
-    .preset-pill:hover {
-      border-color: var(--accent-cyan);
-      color: #fff;
-      background: rgba(6, 182, 212, 0.1);
+    .preset-pill:hover { border-color: var(--accent-cyan); color: #fff; background: rgba(6, 182, 212, 0.1); }
+
+    .slider-group { display: flex; flex-direction: column; gap: 12px; }
+    .slider-row { display: flex; flex-direction: column; gap: 5px; }
+    .slider-header { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-muted); }
+    .slider-header span.val { color: var(--accent-cyan); font-weight: bold; }
+    input[type="range"] { -webkit-appearance: none; width: 100%; height: 5px; background: rgba(255,255,255,0.15); border-radius: 3px; }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%;
+      background: var(--accent-cyan); cursor: pointer;
     }
 
-    /* AI Analysis Section */
     .ai-box {
-      font-size: 0.83rem;
-      line-height: 1.6;
-      color: #d1d5db;
-      max-height: 220px;
-      overflow-y: auto;
-      padding: 10px;
-      background: rgba(0, 0, 0, 0.25);
-      border-radius: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.8rem; line-height: 1.5; color: #d1d5db; max-height: 160px;
+      overflow-y: auto; padding: 10px; background: rgba(0, 0, 0, 0.25); border-radius: 8px;
     }
 
-    /* Right Canvas / Visual Stage */
-    .stage {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      background: #05060a;
-    }
+    /* STAGE */
+    .stage { flex: 1; display: flex; position: relative; background: #05060a; overflow: hidden; }
+    #plotContainer { width: 100%; height: 100%; }
 
-    #plotContainer {
-      width: 100%;
-      height: 100%;
-    }
-
-    /* Floating Toolbar over Graph */
-    .stage-hud {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      display: flex;
-      gap: 8px;
-      z-index: 10;
-    }
+    .stage-hud { position: absolute; top: 16px; right: 16px; display: flex; gap: 8px; z-index: 10; }
     .hud-btn {
-      background: rgba(16, 18, 29, 0.75);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--border-color);
-      color: #fff;
-      padding: 7px 12px;
-      border-radius: 8px;
-      font-size: 0.76rem;
-      font-weight: 500;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: 0.2s;
+      background: rgba(16, 18, 29, 0.75); backdrop-filter: blur(10px); border: 1px solid var(--border-color);
+      color: #fff; padding: 7px 12px; border-radius: 8px; font-size: 0.76rem; font-weight: 500; cursor: pointer;
     }
-    .hud-btn:hover {
-      background: rgba(255, 255, 255, 0.15);
-      border-color: rgba(255, 255, 255, 0.3);
-    }
+    .hud-btn:hover { background: rgba(255, 255, 255, 0.15); }
 
-    /* --- MODAL DIALOGS --- */
+    /* MODAL */
     .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(8px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease;
+      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: 0.2s;
     }
-    .modal-overlay.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
     .modal-card {
-      background: #111422;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 16px;
-      width: 90%;
-      max-width: 500px;
-      padding: 24px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
+      background: #111422; border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 16px; width: 90%; max-width: 480px; padding: 22px; display: flex; flex-direction: column; gap: 14px;
     }
     .modal-card input {
-      background: rgba(0, 0, 0, 0.4);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      color: #fff;
-      padding: 10px 14px;
-      font-size: 0.85rem;
-      outline: none;
-    }
-    .modal-card input:focus {
-      border-color: var(--accent-violet);
+      background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-color);
+      border-radius: 8px; color: #fff; padding: 9px 12px; font-size: 0.85rem; outline: none;
     }
 
-    /* --- PRINT STYLES (DOSSIER REPORT VIEW) --- */
+    /* DEDICATED 1-PAGE PRINT CONTAINER (HIDDEN ON SCREEN) */
+    #printWrapper {
+      display: none;
+    }
+
+    /* EXACT 1-PAGE PRINT FORMATTING */
     @media print {
-      body {
-        background: #fff !important;
-        color: #000 !important;
-        height: auto;
-        overflow: visible;
+      @page {
+        size: A4 portrait;
+        margin: 8mm;
       }
-      .browser-header, .stage-hud, .modal-overlay, .presets-container, .nav-actions, .btn-action-primary, .mode-selector {
+      html, body {
+        width: 100% !important;
+        height: 100% !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+        overflow: hidden !important;
+      }
+      /* Hide entire interactive app */
+      .browser-header, .viewport, .modal-overlay {
         display: none !important;
       }
-      .viewport {
-        display: block !important;
-      }
-      .sidebar {
+      /* Show only printWrapper locked to 1 single page */
+      #printWrapper {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
         width: 100% !important;
-        border: none !important;
-        background: transparent !important;
-        padding: 0 !important;
+        height: 100vh !important;
+        box-sizing: border-box !important;
+        page-break-inside: avoid !important;
+        page-break-after: avoid !important;
       }
-      .card {
-        background: transparent !important;
-        border: 1px solid #ccc !important;
-        color: #000 !important;
-        margin-bottom: 20px;
-        page-break-inside: avoid;
+      #printEquationContainer {
+        width: 100% !important;
+        text-align: center !important;
+        padding-bottom: 8px !important;
+        margin-bottom: 8px !important;
+        border-bottom: 1.5px solid #111 !important;
       }
-      .card-title, .slider-header, .slider-header span.val {
-        color: #000 !important;
-      }
-      .math-display-box {
-        background: #f8f9fa !important;
-        border-color: #ddd !important;
+      #printEquation {
+        font-size: 1.6rem !important;
         color: #000 !important;
       }
-      .ai-box {
-        background: #f8f9fa !important;
-        color: #111 !important;
-        border: 1px solid #eee !important;
-        max-height: none !important;
+      #printImageContainer {
+        flex: 1 !important;
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        overflow: hidden !important;
       }
-      .stage {
-        height: 600px !important;
-        page-break-before: always;
-        background: #fff !important;
+      #printImg {
+        max-width: 100% !important;
+        max-height: calc(100vh - 110px) !important;
+        width: auto !important;
+        height: auto !important;
+        object-fit: contain !important;
+        display: block !important;
       }
     }
   </style>
 </head>
 <body>
 
-  <!-- BROWSER SHELL HEADER -->
+  <!-- BROWSER SHELL -->
   <header class="browser-header">
-    <!-- Tabs Navigation -->
     <div class="tab-bar" id="tabBar">
-      <!-- Tabs will be rendered here dynamically -->
-      <button class="btn-new-tab" id="btnNewTab" title="Open New Equation Tab">+</button>
+      <button class="btn-new-tab" id="btnNewTab" title="Add Tab">+</button>
     </div>
 
-    <!-- Browser Action Bar (Omnibox) -->
     <div class="nav-bar">
       <div class="nav-actions">
-        <button class="nav-btn" id="btnReload" title="Recompute & Refresh Simulation">↻</button>
-        <button class="nav-btn" id="btnSettings" title="Configure Custom AI Key">⚙</button>
-        <button class="nav-btn" id="btnPrint" title="Print Dossier / Export to PDF">⎙</button>
+        <button class="nav-btn" id="btnReload" title="Recompute">↻</button>
+        <button class="nav-btn" id="btnSettings" title="API Settings">⚙</button>
+        <button class="nav-btn" id="btnPrint" title="Print 1-Page Output">⎙</button>
       </div>
 
       <div class="omnibox">
         <span class="omnibox-badge">EQUATION</span>
-        <input type="text" id="omniboxInput" spellcheck="false" placeholder="Enter equation: e.g. z = a * sin(b * sqrt(x^2 + y^2)) or y = a * sin(b * x)" />
+        <input type="text" id="omniboxInput" spellcheck="false" placeholder="Enter equation: e.g. z = a * sin(sqrt(x^2 + y^2) * b)" />
       </div>
 
       <button class="btn-action-primary" id="btnRender">
@@ -555,110 +303,100 @@
 
   <!-- WORKSPACE VIEWPORT -->
   <main class="viewport">
-    
-    <!-- Left Inspector Drawer -->
     <aside class="sidebar">
-      <!-- Live Mathematical Formulation (KaTeX) -->
       <div class="card">
         <div class="card-header">
-          <span class="card-title">Mathematical Formula</span>
+          <span class="card-title">Mathematical Formulation</span>
           <span id="equationStatus" style="font-size: 0.72rem; color: #10b981;">Valid</span>
         </div>
-        <div class="math-display-box" id="katexPreview">
-          <!-- Rendered LaTeX goes here -->
-        </div>
+        <div class="math-display-box" id="katexPreview"></div>
       </div>
 
-      <!-- Mode & Dimension Switcher -->
       <div class="card">
-        <div class="card-header">
-          <span class="card-title">Projection Dimension</span>
-        </div>
+        <div class="card-header"><span class="card-title">Dimension Mode</span></div>
         <div class="mode-selector">
-          <button class="mode-btn active" data-mode="2d">2D Curve</button>
-          <button class="mode-btn" data-mode="3d">3D Surface</button>
-          <button class="mode-btn" data-mode="polar">Polar / Contour</button>
+          <button class="mode-btn" data-mode="2d">2D Curve</button>
+          <button class="mode-btn active" data-mode="3d">3D Surface</button>
+          <button class="mode-btn" data-mode="polar">Contour</button>
         </div>
 
-        <div class="card-title" style="margin-top: 14px; margin-bottom: 8px;">Explore Curated Presets</div>
+        <div class="card-title" style="margin-top: 10px; margin-bottom: 8px;">Quick Presets</div>
         <div class="presets-container">
-          <button class="preset-pill" onclick="loadPreset('wave')">Rippling Wave (3D)</button>
-          <button class="preset-pill" onclick="loadPreset('saddle')">Hyperbolic Saddle (3D)</button>
-          <button class="preset-pill" onclick="loadPreset('fourier')">Harmonic Beat (2D)</button>
+          <button class="preset-pill" onclick="loadPreset('wave')">Ripple Wave (3D)</button>
+          <button class="preset-pill" onclick="loadPreset('saddle')">Saddle (3D)</button>
+          <button class="preset-pill" onclick="loadPreset('fourier')">Harmonic (2D)</button>
           <button class="preset-pill" onclick="loadPreset('gaussian')">Gaussian Bell (2D)</button>
-          <button class="preset-pill" onclick="loadPreset('torus')">Sombrero Function (3D)</button>
+          <button class="preset-pill" onclick="loadPreset('torus')">Sombrero (3D)</button>
         </div>
       </div>
 
-      <!-- Real-Time Parametric Modulators (Sliders) -->
       <div class="card">
         <div class="card-header">
-          <span class="card-title">Hyperparameter Controls</span>
-          <span style="font-size: 0.7rem; color: var(--text-muted);">60 FPS Live Sync</span>
+          <span class="card-title">Live Parameters</span>
+          <span style="font-size: 0.7rem; color: var(--text-muted);">Real-time</span>
         </div>
-        <div class="slider-group" id="slidersContainer">
-          <!-- Parameter sliders generated automatically from formula free variables -->
-        </div>
+        <div class="slider-group" id="slidersContainer"></div>
       </div>
 
-      <!-- AI Mathematical Insight -->
       <div class="card">
         <div class="card-header">
-          <span class="card-title">AI Analytical Reasoning</span>
-          <button class="hud-btn" id="btnAskAi" style="padding: 3px 8px; font-size: 0.7rem;">Analyze</button>
+          <span class="card-title">AI Insight</span>
+          <button class="hud-btn" id="btnAskAi" style="padding: 2px 8px; font-size: 0.7rem;">Analyze</button>
         </div>
-        <div class="ai-box" id="aiOutput">
-          Click <b>Analyze</b> to request deep physical and topological insights from your configured AI model.
-        </div>
+        <div class="ai-box" id="aiOutput">Click <b>Analyze</b> to get AI insights.</div>
       </div>
     </aside>
 
-    <!-- Visual Interactive 2D/3D Stage -->
     <section class="stage">
       <div class="stage-hud">
-        <button class="hud-btn" id="btnExportImage">📷 Export Image</button>
+        <button class="hud-btn" id="btnExportImage">📷 Export PNG</button>
         <button class="hud-btn" id="btnResetCamera">🎯 Reset View</button>
       </div>
       <div id="plotContainer"></div>
     </section>
   </main>
 
-  <!-- MODAL: API KEY & SETTINGS -->
+  <!-- PRINT SECTION (ONE PAGE EXACT DISPLAY) -->
+  <section id="printWrapper">
+    <div id="printEquationContainer">
+      <div id="printEquation"></div>
+    </div>
+    <div id="printImageContainer">
+      <img id="printImg" alt="Equation Plot" />
+    </div>
+  </section>
+
+  <!-- SETTINGS MODAL -->
   <div class="modal-overlay" id="settingsModal">
     <div class="modal-card">
-      <h3 style="font-size: 1.1rem; color: #fff;">OmniMath Settings & API Key</h3>
-      <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
-        Provide your personal API Key (OpenAI, Gemini, or OpenRouter compatible) to unlock AI equation derivations, physical intuition synthesis, and automated theorem assistance.
-      </p>
+      <h3 style="font-size: 1rem; color: #fff;">OmniMath API Settings</h3>
+      <p style="font-size: 0.8rem; color: var(--text-muted);">Enter OpenAI / Gemini compatible endpoint & API key.</p>
 
-      <label style="font-size: 0.78rem; font-weight: 600; color: #a5b4fc;">API Endpoint URL</label>
+      <label style="font-size: 0.75rem; color: #a5b4fc;">Endpoint URL</label>
       <input type="text" id="apiEndpointInput" value="https://api.openai.com/v1/chat/completions" />
 
-      <label style="font-size: 0.78rem; font-weight: 600; color: #a5b4fc;">AI Model Name</label>
+      <label style="font-size: 0.75rem; color: #a5b4fc;">Model Name</label>
       <input type="text" id="apiModelInput" value="gpt-4o-mini" />
 
-      <label style="font-size: 0.78rem; font-weight: 600; color: #a5b4fc;">Your Secret API Key</label>
+      <label style="font-size: 0.75rem; color: #a5b4fc;">API Key</label>
       <input type="password" id="apiKeyInput" placeholder="sk-..." />
 
-      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px;">
-        <button class="nav-btn" style="width: auto; padding: 0 16px;" onclick="closeModal()">Cancel</button>
-        <button class="btn-action-primary" onclick="saveSettings()">Save Configuration</button>
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px;">
+        <button class="nav-btn" style="width: auto; padding: 0 14px;" onclick="closeModal()">Cancel</button>
+        <button class="btn-action-primary" onclick="saveSettings()">Save</button>
       </div>
     </div>
   </div>
 
-  <!-- APPLICATION CORE ARCHITECTURE -->
   <script>
-    /* -------------------------------------------------------------
-       STATE MANAGEMENT & BROWSER TAB SYSTEM
-    ------------------------------------------------------------- */
+    /* APPLICATION STATE */
     let tabs = [
       {
         id: "tab_1",
         title: "3D Ripple Wave",
         equation: "z = a * sin(sqrt(x^2 + y^2) * b)",
         mode: "3d",
-        params: { a: 1.2, b: 2.5 },
+        params: { a: 1.5, b: 2.2 },
         aiNotes: "Represents radial 2D wave dispersion from a central point source."
       },
       {
@@ -667,43 +405,18 @@
         equation: "y = sin(a * x) + sin(b * x)",
         mode: "2d",
         params: { a: 1.0, b: 1.2 },
-        aiNotes: "Superposition of two nearby sinusoids displaying acoustic envelope beats."
+        aiNotes: "Superposition of two sinusoids displaying acoustic beats."
       }
     ];
 
     let activeTabId = "tab_1";
 
     const presets = {
-      wave: {
-        title: "3D Ripple Wave",
-        equation: "z = a * sin(sqrt(x^2 + y^2) * b)",
-        mode: "3d",
-        params: { a: 1.5, b: 2.0 }
-      },
-      saddle: {
-        title: "Hyperbolic Saddle",
-        equation: "z = (x^2 / (a^2)) - (y^2 / (b^2))",
-        mode: "3d",
-        params: { a: 2.0, b: 2.0 }
-      },
-      fourier: {
-        title: "Harmonic Beat",
-        equation: "y = sin(a * x) + sin(b * x)",
-        mode: "2d",
-        params: { a: 1.0, b: 1.15 }
-      },
-      gaussian: {
-        title: "Gaussian Bell",
-        equation: "y = a * exp(- (x^2) / (2 * (b^2)))",
-        mode: "2d",
-        params: { a: 2.5, b: 1.0 }
-      },
-      torus: {
-        title: "Sombrero Function",
-        equation: "z = a * sin(b * sqrt(x^2 + y^2)) / (sqrt(x^2 + y^2) + 0.1)",
-        mode: "3d",
-        params: { a: 3.0, b: 2.2 }
-      }
+      wave: { title: "Ripple Wave", equation: "z = a * sin(sqrt(x^2 + y^2) * b)", mode: "3d", params: { a: 1.5, b: 2.2 } },
+      saddle: { title: "Hyperbolic Saddle", equation: "z = (x^2 / (a^2)) - (y^2 / (b^2))", mode: "3d", params: { a: 2.0, b: 2.0 } },
+      fourier: { title: "Harmonic Beat", equation: "y = sin(a * x) + sin(b * x)", mode: "2d", params: { a: 1.0, b: 1.15 } },
+      gaussian: { title: "Gaussian Bell", equation: "y = a * exp(- (x^2) / (2 * (b^2)))", mode: "2d", params: { a: 2.5, b: 1.0 } },
+      torus: { title: "Sombrero Function", equation: "z = a * sin(b * sqrt(x^2 + y^2)) / (sqrt(x^2 + y^2) + 0.1)", mode: "3d", params: { a: 3.0, b: 2.2 } }
     };
 
     function getCurrentTab() {
@@ -712,7 +425,6 @@
 
     function renderTabs() {
       const container = document.getElementById("tabBar");
-      // Keep '+' button
       const newTabBtn = document.getElementById("btnNewTab");
       container.innerHTML = "";
 
@@ -724,24 +436,16 @@
         const titleSpan = document.createElement("span");
         titleSpan.className = "tab-title";
         titleSpan.textContent = tab.title;
-
-        // Double-click to rename
         titleSpan.ondblclick = (e) => {
           e.stopPropagation();
-          const newName = prompt("Rename Tab:", tab.title);
-          if (newName) {
-            tab.title = newName;
-            renderTabs();
-          }
+          const n = prompt("Rename Tab:", tab.title);
+          if (n) { tab.title = n; renderTabs(); }
         };
 
         const closeBtn = document.createElement("span");
         closeBtn.className = "tab-close";
         closeBtn.innerHTML = "×";
-        closeBtn.onclick = (e) => {
-          e.stopPropagation();
-          closeTab(tab.id);
-        };
+        closeBtn.onclick = (e) => { e.stopPropagation(); closeTab(tab.id); };
 
         tabEl.appendChild(titleSpan);
         if (tabs.length > 1) tabEl.appendChild(closeBtn);
@@ -755,29 +459,24 @@
       activeTabId = id;
       const tab = getCurrentTab();
       document.getElementById("omniboxInput").value = tab.equation;
-      
-      // Update mode switcher buttons
       document.querySelectorAll(".mode-btn").forEach(btn => {
         btn.classList.toggle("active", btn.getAttribute("data-mode") === tab.mode);
       });
-
       document.getElementById("aiOutput").innerHTML = tab.aiNotes || "Click <b>Analyze</b> to get insights for this tab.";
       renderTabs();
       syncUI();
     }
 
-    function createNewTab(presetData = null) {
+    function createNewTab() {
       const newId = "tab_" + Date.now();
-      const defaultData = presetData || {
+      tabs.push({
         id: newId,
         title: "New Formulation",
         equation: "y = a * sin(b * x)",
         mode: "2d",
         params: { a: 2, b: 1 },
         aiNotes: ""
-      };
-      defaultData.id = newId;
-      tabs.push(defaultData);
+      });
       switchTab(newId);
     }
 
@@ -785,9 +484,7 @@
       if (tabs.length <= 1) return;
       const idx = tabs.findIndex(t => t.id === id);
       tabs = tabs.filter(t => t.id !== id);
-      if (activeTabId === id) {
-        activeTabId = tabs[Math.max(0, idx - 1)].id;
-      }
+      if (activeTabId === id) activeTabId = tabs[Math.max(0, idx - 1)].id;
       switchTab(activeTabId);
     }
 
@@ -807,27 +504,19 @@
       syncUI();
     }
 
-    /* -------------------------------------------------------------
-       MATH PARSING & COMPILATION ENGINE
-    ------------------------------------------------------------- */
     function cleanMathExpression(raw) {
       let expr = raw.trim();
-      if (expr.includes("=")) {
-        expr = expr.split("=")[1].trim();
-      }
+      if (expr.includes("=")) expr = expr.split("=")[1].trim();
       return expr;
     }
 
-    function extractFreeParameters(expressionStr, mode) {
+    function extractFreeParameters(expressionStr) {
       try {
         const parsed = math.parse(expressionStr);
         const symbols = new Set();
         parsed.traverse(node => {
-          if (node.isSymbolNode) {
-            symbols.add(node.name);
-          }
+          if (node.isSymbolNode) symbols.add(node.name);
         });
-        // Remove known coordinate variables and math constants
         ['x', 'y', 'z', 't', 'r', 'theta', 'pi', 'e', 'i', 'sin', 'cos', 'tan', 'sqrt', 'exp', 'log', 'abs'].forEach(c => symbols.delete(c));
         return Array.from(symbols);
       } catch (err) {
@@ -848,11 +537,11 @@
         const parsed = math.parse(clean);
         const tex = parsed.toTex({ parenthesis: 'keep' });
         katex.render(lhs + tex, el, { throwOnError: false, displayMode: true });
-        document.getElementById("equationStatus").textContent = "Valid Syntax";
+        document.getElementById("equationStatus").textContent = "Valid";
         document.getElementById("equationStatus").style.color = "#10b981";
-      } catch (e) {
-        el.innerHTML = `<span style="color: #ef4444; font-size: 0.85rem;">${raw || "Awaiting input..."}</span>`;
-        document.getElementById("equationStatus").textContent = "Parsing...";
+      } catch {
+        el.innerHTML = `<span style="color:#ef4444; font-size: 0.85rem;">${raw || "Awaiting input..."}</span>`;
+        document.getElementById("equationStatus").textContent = "Parsing";
         document.getElementById("equationStatus").style.color = "#f59e0b";
       }
     }
@@ -863,41 +552,35 @@
       container.innerHTML = "";
 
       if (paramList.length === 0) {
-        container.innerHTML = `<div style="font-size:0.75rem; color:var(--text-muted);">No free parametric constants detected (e.g., $a, b, k$).</div>`;
+        container.innerHTML = `<div style="font-size:0.75rem; color:var(--text-muted);">No free parameters (a, b, k...) found.</div>`;
         return;
       }
 
       paramList.forEach(param => {
-        if (tab.params[param] === undefined) {
-          tab.params[param] = 1.0;
-        }
+        if (tab.params[param] === undefined) tab.params[param] = 1.0;
         const currentVal = tab.params[param];
 
         const row = document.createElement("div");
         row.className = "slider-row";
         row.innerHTML = `
           <div class="slider-header">
-            <span>Parameter <b>${param}</b></span>
+            <span>Param <b>${param}</b></span>
             <span class="val" id="val_${param}">${Number(currentVal).toFixed(2)}</span>
           </div>
           <input type="range" min="-10" max="10" step="0.05" value="${currentVal}" id="slider_${param}">
         `;
 
-        const slider = row.querySelector(`#slider_${param}`);
-        slider.addEventListener("input", (e) => {
+        row.querySelector(`#slider_${param}`).addEventListener("input", (e) => {
           const val = parseFloat(e.target.value);
           tab.params[param] = val;
           document.getElementById(`val_${param}`).textContent = val.toFixed(2);
-          computeAndPlot(false); // fast re-plot
+          computeAndPlot(false);
         });
 
         container.appendChild(row);
       });
     }
 
-    /* -------------------------------------------------------------
-       PLOTLY HIGH-PERFORMANCE VISUALIZER
-    ------------------------------------------------------------- */
     function computeAndPlot(resetCamera = false) {
       const tab = getCurrentTab();
       const raw = document.getElementById("omniboxInput").value;
@@ -908,7 +591,6 @@
         const compiled = math.compile(clean);
 
         if (tab.mode === "2d") {
-          // Compute 2D Curve
           const nPoints = 500;
           const xValues = [];
           const yValues = [];
@@ -918,9 +600,8 @@
           for (let x = -range; x <= range; x += step) {
             xValues.push(x);
             try {
-              const scope = { x, ...tab.params };
-              let y = compiled.evaluate(scope);
-              if (typeof y === "object" && y.re !== undefined) y = y.re; // handle complex numbers
+              let y = compiled.evaluate({ x, ...tab.params });
+              if (typeof y === "object" && y.re !== undefined) y = y.re;
               yValues.push(y);
             } catch {
               yValues.push(null);
@@ -931,34 +612,22 @@
             x: xValues,
             y: yValues,
             mode: 'lines',
-            line: {
-              color: '#06b6d4',
-              width: 3.5,
-              shape: 'spline'
-            },
+            line: { color: '#06b6d4', width: 3.5, shape: 'spline' },
             type: 'scatter'
           };
 
           const layout = {
+            autosize: true,
             paper_bgcolor: 'rgba(0,0,0,0)',
             plot_bgcolor: 'rgba(0,0,0,0)',
-            margin: { l: 45, r: 20, t: 30, b: 40 },
-            xaxis: {
-              gridcolor: 'rgba(255,255,255,0.06)',
-              zerolinecolor: 'rgba(255,255,255,0.2)',
-              color: '#9ca3af'
-            },
-            yaxis: {
-              gridcolor: 'rgba(255,255,255,0.06)',
-              zerolinecolor: 'rgba(255,255,255,0.2)',
-              color: '#9ca3af'
-            }
+            margin: { l: 50, r: 25, t: 30, b: 40 },
+            xaxis: { gridcolor: 'rgba(255,255,255,0.06)', color: '#9ca3af' },
+            yaxis: { gridcolor: 'rgba(255,255,255,0.06)', color: '#9ca3af' }
           };
 
           Plotly.react(container, [trace], layout, { responsive: true, displayModeBar: false });
 
-        } else if (tab.mode === "3d" || tab.mode === "polar") {
-          // Compute 3D Meshgrid Surface
+        } else {
           const gridSize = 65;
           const range = 6;
           const step = (range * 2) / gridSize;
@@ -977,8 +646,7 @@
             for (let j = 0; j < xArray.length; j++) {
               const x = xArray[j];
               try {
-                const scope = { x, y, ...tab.params };
-                let z = compiled.evaluate(scope);
+                let z = compiled.evaluate({ x, y, ...tab.params });
                 if (typeof z === "object" && z.re !== undefined) z = z.re;
                 row.push(isNaN(z) ? 0 : z);
               } catch {
@@ -994,16 +662,14 @@
             z: zMatrix,
             type: tab.mode === 'polar' ? 'contour' : 'surface',
             colorscale: 'Viridis',
-            contours: {
-              z: { show: true, usecolormap: true, highlightcolor: "#fff", project: { z: true } }
-            },
-            lighting: { ambient: 0.7, diffuse: 0.8, roughness: 0.5, specular: 0.4 }
+            contours: { z: { show: true, usecolormap: true, project: { z: true } } }
           };
 
           const layout = {
+            autosize: true,
             paper_bgcolor: 'rgba(0,0,0,0)',
             plot_bgcolor: 'rgba(0,0,0,0)',
-            margin: { l: 0, r: 0, t: 0, b: 0 },
+            margin: { l: 0, r: 0, t: 0, b: 0, pad: 0 },
             scene: {
               xaxis: { color: '#9ca3af', gridcolor: 'rgba(255,255,255,0.08)' },
               yaxis: { color: '#9ca3af', gridcolor: 'rgba(255,255,255,0.08)' },
@@ -1015,7 +681,7 @@
           Plotly.react(container, [trace], layout, { responsive: true, displayModeBar: false });
         }
       } catch (err) {
-        console.warn("Plotting evaluation waiting for valid syntax: ", err);
+        console.warn("Plotting waiting for valid equation: ", err);
       }
     }
 
@@ -1025,14 +691,72 @@
       tab.equation = raw;
       renderLaTeXPreview(raw);
       const clean = cleanMathExpression(raw);
-      const params = extractFreeParameters(clean, tab.mode);
+      const params = extractFreeParameters(clean);
       generateSliders(params);
-      computeAndPlot(true);
+      computeAndPlot(false);
     }
 
-    /* -------------------------------------------------------------
-       AI INTEGRATION LAYER
-    ------------------------------------------------------------- */
+    /* FULL PNG EXPORT - COMPLETE GRAPH INCLUDED */
+    async function exportEntirePlotPNG() {
+      const container = document.getElementById("plotContainer");
+      const tab = getCurrentTab();
+      
+      // Calculate high resolution without cropping
+      const width = 2400;
+      const height = 1500;
+
+      const dataUrl = await Plotly.toImage(container, {
+        format: 'png',
+        width: width,
+        height: height
+      });
+
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = `${tab.title.toLowerCase().replace(/\s+/g, '_')}_visualization.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    /* EXACT 1-PAGE PRINT TRIGGER */
+    async function triggerOnePagePrint() {
+      const container = document.getElementById("plotContainer");
+      const tab = getCurrentTab();
+      const printEq = document.getElementById("printEquation");
+      const printImg = document.getElementById("printImg");
+
+      // Render KaTeX for Print Header
+      try {
+        let clean = tab.equation.trim();
+        let lhs = "";
+        if (clean.includes("=")) {
+          const p = clean.split("=");
+          lhs = p[0].trim() + " = ";
+          clean = p[1].trim();
+        }
+        const tex = math.parse(clean).toTex({ parenthesis: 'keep' });
+        katex.render(lhs + tex, printEq, { throwOnError: false, displayMode: true });
+      } catch {
+        printEq.textContent = tab.equation;
+      }
+
+      // Snapshot the exact camera orientation
+      const dataUrl = await Plotly.toImage(container, {
+        format: 'png',
+        width: 2200,
+        height: 1600
+      });
+
+      printImg.src = dataUrl;
+
+      // Small delay to ensure image DOM is fully loaded before browser prints
+      setTimeout(() => {
+        window.print();
+      }, 150);
+    }
+
+    /* AI LAYER */
     async function requestAIAnalysis() {
       const apiKey = localStorage.getItem("omnimath_api_key");
       const endpoint = localStorage.getItem("omnimath_api_endpoint") || "https://api.openai.com/v1/chat/completions";
@@ -1042,101 +766,51 @@
 
       if (!apiKey) {
         openModal();
-        outputEl.innerHTML = `<span style="color:#f59e0b;">Please configure your API Key in the Settings dialog to use the AI Analysis feature.</span>`;
+        outputEl.innerHTML = `<span style="color:#f59e0b;">Configure your API Key in Settings to enable AI analysis.</span>`;
         return;
       }
 
-      outputEl.innerHTML = `<i>Consulting neural mathematical core...</i>`;
-
-      const prompt = `You are a world-class theoretical mathematician and physicist. Analyze this equation:
-${tab.equation}
-Current parameter settings: ${JSON.stringify(tab.params)}
-Mode: ${tab.mode}
-
-Provide:
-1. Physical Intuition & Meaning (in 2 concise paragraphs).
-2. Key Mathematical Properties (extrema, singularities, symmetries, asymptotic behavior).
-3. Where this formulation emerges in real-world physics or engineering. Keep it concise, elegant, and intellectually profound.`;
+      outputEl.innerHTML = `<i>Reasoning over equation...</i>`;
+      const prompt = `Analyze equation: ${tab.equation} with parameters ${JSON.stringify(tab.params)}. Provide concise physical intuition and mathematical properties.`;
 
       try {
         const response = await fetch(endpoint, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`
-          },
-          body: JSON.stringify({
-            model: model,
-            messages: [{ role: "user", content: prompt }],
-            temperature: 0.3
-          })
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+          body: JSON.stringify({ model, messages: [{ role: "user", content: prompt }], temperature: 0.3 })
         });
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${await response.text()}`);
-        }
-
         const data = await response.json();
-        const reply = data.choices[0].message.content;
-        tab.aiNotes = reply.replace(/\n/g, "<br>");
+        tab.aiNotes = data.choices[0].message.content.replace(/\n/g, "<br>");
         outputEl.innerHTML = tab.aiNotes;
       } catch (err) {
-        outputEl.innerHTML = `<span style="color:#ef4444;">API Request Error: ${err.message}</span>`;
+        outputEl.innerHTML = `<span style="color:#ef4444;">API Error: ${err.message}</span>`;
       }
     }
 
-    /* -------------------------------------------------------------
-       SETTINGS & MODAL DIALOGS
-    ------------------------------------------------------------- */
     function openModal() {
       document.getElementById("apiKeyInput").value = localStorage.getItem("omnimath_api_key") || "";
-      document.getElementById("apiEndpointInput").value = localStorage.getItem("omnimath_api_endpoint") || "https://api.openai.com/v1/chat/completions";
-      document.getElementById("apiModelInput").value = localStorage.getItem("omnimath_api_model") || "gpt-4o-mini";
       document.getElementById("settingsModal").classList.add("active");
     }
-
-    function closeModal() {
-      document.getElementById("settingsModal").classList.remove("active");
-    }
-
+    function closeModal() { document.getElementById("settingsModal").classList.remove("active"); }
     function saveSettings() {
       localStorage.setItem("omnimath_api_key", document.getElementById("apiKeyInput").value.trim());
       localStorage.setItem("omnimath_api_endpoint", document.getElementById("apiEndpointInput").value.trim());
       localStorage.setItem("omnimath_api_model", document.getElementById("apiModelInput").value.trim());
       closeModal();
-      alert("Settings saved successfully.");
     }
 
-    /* -------------------------------------------------------------
-       EVENT LISTENERS & BINDINGS
-    ------------------------------------------------------------- */
-    document.getElementById("btnNewTab").onclick = () => createNewTab();
-    document.getElementById("btnRender").onclick = () => syncUI();
-    document.getElementById("btnReload").onclick = () => syncUI();
-    document.getElementById("btnSettings").onclick = () => openModal();
-    document.getElementById("btnAskAi").onclick = () => requestAIAnalysis();
-
-    document.getElementById("btnPrint").onclick = () => {
-      window.print();
-    };
-
-    document.getElementById("btnExportImage").onclick = () => {
-      Plotly.downloadImage("plotContainer", {
-        format: 'png',
-        width: 1920,
-        height: 1080,
-        filename: `${getCurrentTab().title.toLowerCase().replace(/\s+/g, '_')}_visualization`
-      });
-    };
-
-    document.getElementById("btnResetCamera").onclick = () => {
-      computeAndPlot(true);
-    };
+    /* EVENT BINDINGS */
+    document.getElementById("btnNewTab").onclick = createNewTab;
+    document.getElementById("btnRender").onclick = syncUI;
+    document.getElementById("btnReload").onclick = syncUI;
+    document.getElementById("btnSettings").onclick = openModal;
+    document.getElementById("btnAskAi").onclick = requestAIAnalysis;
+    document.getElementById("btnPrint").onclick = triggerOnePagePrint;
+    document.getElementById("btnExportImage").onclick = exportEntirePlotPNG;
+    document.getElementById("btnResetCamera").onclick = () => computeAndPlot(true);
 
     document.getElementById("omniboxInput").addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        syncUI();
-      }
+      if (e.key === "Enter") syncUI();
     });
 
     document.querySelectorAll(".mode-btn").forEach(btn => {
@@ -1148,12 +822,19 @@ Provide:
       };
     });
 
-    // Handle Window Resize dynamically
     window.addEventListener("resize", () => {
       Plotly.Plots.resize(document.getElementById("plotContainer"));
     });
 
-    // Initialize Workspace
+    // Intercept keyboard shortcuts (Ctrl+P / Cmd+P) to use exact 1-page orientation print
+    window.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+        e.preventDefault();
+        triggerOnePagePrint();
+      }
+    });
+
+    // Bootstrap
     renderTabs();
     switchTab("tab_1");
   </script>
